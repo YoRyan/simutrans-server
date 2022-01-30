@@ -11,4 +11,4 @@ RUN curl -L -o pak.zip https://downloads.sourceforge.net/project/simutrans/pak64
 # second stage
 FROM yoryan/simutrans-server:steam
 COPY --from=builder /download/simutrans/pak/ /game/pak/
-ENTRYPOINT ["/game/simutrans", "-singleuser", "-objects", "pak"]
+ENTRYPOINT ["/game/simutrans", "-server", "-singleuser", "-objects", "pak"]
