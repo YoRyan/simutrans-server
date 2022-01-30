@@ -6,7 +6,7 @@ on:
       - 'main'
 
 jobs:
-  docker:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       -
@@ -29,5 +29,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          file: '{context}/Dockerfile'
+          file: Dockerfile
           tags: yoryan/simutrans-server:steam
