@@ -23,7 +23,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push core
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -31,3 +30,12 @@ jobs:
           platforms: linux/amd64
           file: Dockerfile
           tags: yoryan/simutrans-server:steam
+      -
+        name: Build and push pak64
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          file: Dockerfile.pak64
+          tags: yoryan/simutrans-server:steam-pak64
