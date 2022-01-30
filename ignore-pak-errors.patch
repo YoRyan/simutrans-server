@@ -1,0 +1,18 @@
+Index: simmain.cc
+===================================================================
+--- simmain.cc  (revision 10333)
++++ simmain.cc  (working copy)
+@@ -1131,13 +1131,6 @@
+	if(  env_t::verbose_debug >= log_t::LEVEL_DEBUG  ) {
+		pakset_info_t::debug();
+	}
+-	if(  !overlaid_warning.empty()  ) {
+-		overlaid_warning.append( "<p>Continue by click, ESC, SPACE, or BACKSPACE.<br>" );
+-		help_frame_t *win = new help_frame_t();
+-		win->set_text( overlaid_warning.c_str() );
+-		modal_dialogue( win, magic_pakset_info_t, NULL, wait_for_key );
+-		destroy_all_win(true);
+-	}
+
+	// load tool scripts
+	dbg->message("simu_main()","Reading tool scripts ...");

@@ -1,0 +1,14 @@
+# first stage
+FROM debian:stable AS builder
+RUN apt update && apt install -y \
+  curl \
+  unzip
+WORKDIR /download
+ARG VERSION=123-0
+RUN curl -L -o pak.zip https://downloads.sourceforge.net/project/simutrans/pak64/${VERSION}/simupak64-${VERSION}.zip && \
+  unzip pak.zip && rm pak.zip
+
+# second stage
+FROM yoryan/simutrans-server:steam
+COPY --from=builder /download/simutrans/pak/ /game/pak/
+ENTRYPOINT ["/game/simutrans", "-singleuser", "-objects", "pak"]
