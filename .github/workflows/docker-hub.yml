@@ -37,5 +37,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          file: Dockerfile.pak64
+          file: Dockerfile.pak
+          build-args:
+            PAK_URL: https://downloads.sourceforge.net/project/simutrans/pak64/123-0/simupak64-123-0.zip
+            PAK_DIR: pak
           tags: yoryan/simutrans-server:steam-pak64
