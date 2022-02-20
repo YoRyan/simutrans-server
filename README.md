@@ -7,6 +7,7 @@ This repository contains Simutrans headless servers that are ready to run in Doc
 - `steam` (executable only; not playable)
 - `steam-pak64`
 - `steam-pak128`
+- `steam-pak128.german`
 
 ## Usage
 

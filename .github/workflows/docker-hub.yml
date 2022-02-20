@@ -51,3 +51,14 @@ jobs:
             PAK_URL=https://downloads.sourceforge.net/project/simutrans/pak128/pak128%202.8.2%20for%20ST%20123up/simupak128-2.8.2-for123.zip
             PAK_DIR=pak128
           tags: yoryan/simutrans-server:steam-pak128
+      -
+        name: Build and push pak128.german
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          platforms: linux/amd64
+          file: Dockerfile.pak
+          build-args: |
+            PAK_URL=https://downloads.sourceforge.net/project/simutrans/PAK128.german/PAK128.german_2.1_for_ST_123.0/PAK128.german_2.1_for_ST_123.0.zip
+            PAK_DIR=PAK128.german
+          tags: yoryan/simutrans-server:steam-pak128.german
