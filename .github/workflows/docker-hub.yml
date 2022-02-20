@@ -48,6 +48,6 @@ jobs:
           platforms: linux/amd64
           file: Dockerfile.pak
           build-args: |
-            PAK_URL=https://downloads.sourceforge.net/project/simutrans/pak128/pak128%20for%20ST%20120.4.1%20%282.8.1%2C%20priority%20signals%20%2B%20bugfix%29/pak128.zip
+            PAK_URL=https://downloads.sourceforge.net/project/simutrans/pak128/pak128%202.8.2%20for%20ST%20123up/simupak128-2.8.2-for123.zip
             PAK_DIR=pak128
           tags: yoryan/simutrans-server:steam-pak128

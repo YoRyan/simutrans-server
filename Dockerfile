@@ -15,7 +15,7 @@ RUN dpkg --add-architecture i386 && apt update && apt install -y \
   zlib1g-dev:i386
 WORKDIR /code
 
-ARG REVISION=10333
+ARG REVISION=10421
 RUN svn checkout svn://servers.simutrans.org@$REVISION
 WORKDIR /code/simutrans/trunk
 COPY ignore-pak-errors.patch ./
