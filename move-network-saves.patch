@@ -1,0 +1,39 @@
+diff --git a/network/network_cmd_ingame.cc b/network/network_cmd_ingame.cc
+index 579f7aa3a..5c432f258 100644
+--- a/network/network_cmd_ingame.cc
++++ b/network/network_cmd_ingame.cc
+@@ -761,7 +761,7 @@ void nwc_sync_t::do_command(karte_t *welt)
+ 		}
+ 
+ 		// save game
+-		sprintf( fn, "server%d-network.sve", env_t::server );
++		sprintf( fn, "save/server%d-network.sve", env_t::server );
+ 		bool old_restore_UI = env_t::restore_UI;
+ 		env_t::restore_UI = true;
+ 		welt->save( fn, false, SERVER_SAVEGAME_VER_NR, false );
+diff --git a/simmain.cc b/simmain.cc
+index 3f21c3078..b9a9b5ff3 100644
+--- a/simmain.cc
++++ b/simmain.cc
+@@ -1259,7 +1259,7 @@ int simu_main(int argc, char** argv)
+ 		dr_chdir( env_t::user_dir );
+ 		loadsave_t file;
+ 		static char servername[128];
+-		sprintf( servername, "server%d-network.sve", env_t::server );
++		sprintf( servername, "save/server%d-network.sve", env_t::server );
+ 		// try recover with the latest savegame
+ 		if(  file.rd_open(servername) == loadsave_t::FILE_STATUS_OK  ) {
+ 			// compare pakset (objfilename has trailing path separator, pak_extension not)
+diff --git a/simworld.cc b/simworld.cc
+index fa4df6445..7ecd7dd62 100644
+--- a/simworld.cc
++++ b/simworld.cc
+@@ -5008,7 +5008,7 @@ bool karte_t::load(const char *filename)
+ 		if(  env_t::networkmode  ) {
+ 			if(  env_t::server  ) {
+ 				char fn[256];
+-				sprintf( fn, "server%d-network.sve", env_t::server );
++				sprintf( fn, "save/server%d-network.sve", env_t::server );
+ 				if(  strcmp(filename, fn) != 0  ) {
+ 					// stay in networkmode, but disconnect clients
+ 					dbg->warning("karte_t::load", "Disconnecting all clients");

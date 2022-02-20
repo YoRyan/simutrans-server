@@ -18,8 +18,9 @@ WORKDIR /code
 ARG REVISION=10421
 RUN svn checkout svn://servers.simutrans.org@$REVISION
 WORKDIR /code/simutrans/trunk
-COPY ignore-pak-errors.patch ./
-RUN patch -p0 <ignore-pak-errors.patch && \
+COPY ignore-pak-errors.patch move-network-saves.patch ./
+RUN patch -p1 <ignore-pak-errors.patch && \
+  patch -p1 <move-network-saves.patch && \
   autoconf && ./configure && \
   make -j8 CC='gcc -m32 -static' CXX='g++ -m32 -static'
 RUN ./get_lang_files.sh

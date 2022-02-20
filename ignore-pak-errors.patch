@@ -1,11 +1,11 @@
-Index: simmain.cc
-===================================================================
---- simmain.cc  (revision 10333)
-+++ simmain.cc  (working copy)
-@@ -1131,13 +1131,6 @@
-	if(  env_t::verbose_debug >= log_t::LEVEL_DEBUG  ) {
-		pakset_info_t::debug();
-	}
+diff --git a/simmain.cc b/simmain.cc
+index b9a9b5ff3..5c4c497fa 100644
+--- a/simmain.cc
++++ b/simmain.cc
+@@ -1143,13 +1143,6 @@ int simu_main(int argc, char** argv)
+ 	if(  env_t::verbose_debug >= log_t::LEVEL_DEBUG  ) {
+ 		pakset_info_t::debug();
+ 	}
 -	if(  !overlaid_warning.empty()  ) {
 -		overlaid_warning.append( "<p>Continue by click, ESC, SPACE, or BACKSPACE.<br>" );
 -		help_frame_t *win = new help_frame_t();
@@ -13,6 +13,6 @@ Index: simmain.cc
 -		modal_dialogue( win, magic_pakset_info_t, NULL, wait_for_key );
 -		destroy_all_win(true);
 -	}
-
-	// load tool scripts
-	dbg->message("simu_main()","Reading tool scripts ...");
+ 
+ 	// load tool scripts
+ 	dbg->message("simu_main()","Reading tool scripts ...");
