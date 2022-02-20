@@ -35,4 +35,5 @@ COPY --from=builder /etc/passwd /etc/group /etc/
 COPY --from=builder --chown=simu:simu /code/dist/simutrans/ /game/
 USER simu
 ENTRYPOINT ["/game/simutrans", "-server", "-singleuser"]
+VOLUME /game/save
 EXPOSE 13353
