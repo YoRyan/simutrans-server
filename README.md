@@ -12,8 +12,12 @@ Compared to compiling Simutrans yourself, this image has a few extra features:
 
 - `steam` (executable only; not playable)
 - `steam-pak64`
+- `steam-pak64.german`
 - `steam-pak128`
+- `steam-pak128.britain`
 - `steam-pak128.german`
+- `steam-pak128.japan`
+- `steam-pak192.comic`
 
 ## Usage
 

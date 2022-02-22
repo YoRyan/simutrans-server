@@ -1,15 +1,26 @@
+#syntax=docker/dockerfile:1.2
+
+ARG SIMUTRANS_APPID=434520
+ARG DLC_DEPOT=434529
+ARG PAK_DIR=pak128
+
 # first stage
-FROM debian:stable AS downloader
-RUN apt update && apt install -y \
-  curl \
-  unzip
-WORKDIR /download
-ARG PAK_URL=https://downloads.sourceforge.net/project/simutrans/pak64/123-0/simupak64-123-0.zip
-RUN curl -L -o pak.zip ${PAK_URL} && \
-  unzip pak.zip && rm pak.zip
+FROM steamcmd/steamcmd:alpine AS downloader
+ARG SIMUTRANS_APPID
+ARG DLC_DEPOT
+# You need a Steam account with licenses for Simutrans and all its DLC's and without Steam Guard.
+RUN --mount=type=secret,id=steam_login \
+  steamcmd \
+  +login `cat /run/secrets/steam_login` \
+  +download_depot ${SIMUTRANS_APPID} ${DLC_DEPOT} \
+  +quit
 
 # second stage
 FROM yoryan/simutrans-server:steam
-ARG PAK_DIR=pak
-COPY --from=downloader /download/simutrans/${PAK_DIR}/ /game/pak/
+ARG SIMUTRANS_APPID
+ARG DLC_DEPOT
+ARG PAK_DIR
+COPY --from=downloader --chown=simu:simu \
+  /root/.steam/steamcmd/linux32/steamapps/content/app_${SIMUTRANS_APPID}/depot_${DLC_DEPOT}/${PAK_DIR} \
+  /game/pak/
 ENTRYPOINT ["/game/simutrans", "-server", "-singleuser", "-objects", "pak"]
