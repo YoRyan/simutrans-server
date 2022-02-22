@@ -1,7 +1,7 @@
 # first stage
 FROM debian:stable AS builder
 
-RUN dpkg --add-architecture i386 && apt update && apt install -y \
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
   autoconf \
   build-essential \
   curl \
