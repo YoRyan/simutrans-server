@@ -10,25 +10,25 @@ Compared to compiling Simutrans yourself, this image has a few extra features:
 
 ## Tags
 
-- `steam` (executable only; not playable)
-- `steam-pak64`
-- `steam-pak64.german`
-- `steam-pak128`
-- `steam-pak128.britain`
-- `steam-pak128.german`
-- `steam-pak128.japan`
-- `steam-pak192.comic`
+- `steam-standard` (executable only; not playable)
+- `steam-standard-pak64`
+- `steam-standard-pak64.german`
+- `steam-standard-pak128`
+- `steam-standard-pak128.britain`
+- `steam-standard-pak128.german`
+- `steam-standard-pak128.japan`
+- `steam-standard-pak192.comic`
 
 ## Usage
 
 Save state is stored in the `/game/save/` folder. On the first run, you can use the `-load` flag to load any save game in this folder.
 
 ```
-docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-pak64 -load MyServerTemplateGame
+docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-standard-pak64 -load MyServerTemplateGame
 ```
 
 Simutrans will update the autosave file at `/game/save/server13353-network.sve` whenever a new client connects. You can omit the `-load` flag to load this autosave.
 
 ```
-docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-pak64
+docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-standard-pak64
 ```

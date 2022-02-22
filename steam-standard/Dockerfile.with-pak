@@ -16,7 +16,7 @@ RUN --mount=type=secret,id=steam_login \
   +quit
 
 # second stage
-FROM yoryan/simutrans-server:steam
+FROM yoryan/simutrans-server:steam-standard
 ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
 ARG PAK_DIR

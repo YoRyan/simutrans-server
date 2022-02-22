@@ -22,101 +22,109 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push core
+        name: Build and push steam/standard core
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile
-          tags: yoryan/simutrans-server:steam
+          file: Dockerfile.core
+          tags: yoryan/simutrans-server:steam-standard
       -
-        name: Build and push pak128
+        name: Build and push steam/standard pak128
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=434529
             PAK_DIR=pak128
-          tags: yoryan/simutrans-server:steam-pak128
+          tags: yoryan/simutrans-server:steam-standard-pak128
       -
-        name: Build and push pak64
+        name: Build and push steam/standard pak64
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=434630
             PAK_DIR=pak64
-          tags: yoryan/simutrans-server:steam-pak64
+          tags: yoryan/simutrans-server:steam-standard-pak64
       -
-        name: Build and push pak128.britain
+        name: Build and push steam/standard pak128.britain
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=434631
             PAK_DIR=pak128.Britain
-          tags: yoryan/simutrans-server:steam-pak128.britain
+          tags: yoryan/simutrans-server:steam-standard-pak128.britain
       -
-        name: Build and push pak192.comic
+        name: Build and push steam/standard pak192.comic
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=434632
             PAK_DIR=pak192.comic
-          tags: yoryan/simutrans-server:steam-pak192.comic
+          tags: yoryan/simutrans-server:steam-standard-pak192.comic
       -
-        name: Build and push pak128.german
+        name: Build and push steam/standard pak128.german
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=434633
             PAK_DIR=pak128.german
-          tags: yoryan/simutrans-server:steam-pak128.german
+          tags: yoryan/simutrans-server:steam-standard-pak128.german
       -
-        name: Build and push pak128.japan
+        name: Build and push steam/standard pak128.japan
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=435960
             PAK_DIR=pak128.japan
-          tags: yoryan/simutrans-server:steam-pak128.japan
+          tags: yoryan/simutrans-server:steam-standard-pak128.japan
       -
-        name: Build and push pak64.german
+        name: Build and push steam/standard pak64.german
         uses: docker/build-push-action@v2
         with:
           push: true
+          context: steam-standard
           platforms: linux/amd64
-          file: Dockerfile.pak
+          file: Dockerfile.with-pak
           secrets: |
             "steam_login=${{ secrets.STEAM_LOGIN }}"
           build-args: |
             DLC_DEPOT=435963
             PAK_DIR=pak64.german
-          tags: yoryan/simutrans-server:steam-pak64.german
+          tags: yoryan/simutrans-server:steam-standard-pak64.german
