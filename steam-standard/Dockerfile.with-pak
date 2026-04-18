@@ -21,6 +21,6 @@ ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
 ARG PAK_DIR
 COPY --from=downloader --chown=simu:simu \
-  /root/.steam/steamcmd/linux32/steamapps/content/app_${SIMUTRANS_APPID}/depot_${DLC_DEPOT}/${PAK_DIR} \
+  /root/.local/share/Steam/steamcmd/linux32/steamapps/content/app_${SIMUTRANS_APPID}/depot_${DLC_DEPOT}/${PAK_DIR} \
   /game/pak/
 ENTRYPOINT ["/game/simutrans", "-server", "-singleuser", "-objects", "pak"]
