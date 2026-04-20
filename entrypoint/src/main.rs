@@ -82,9 +82,11 @@ fn main() {
         let wait_op_s = loop_op_s.clone();
         let wait_thread = thread::spawn(move || {
             child_arc_clone.wait().unwrap();
-            // We need to wake the main (kill) thread if simutrans exits before
-            // any kill was attempted.
-            let _ = wait_op_s.send(Operation::Wakeup);
+            // We may need to wake the main (kill) thread if simutrans exits
+            // before any kill was attempted.
+            // Don't block in case another source already sent some other value
+            // and there is nobody listening to consume ours.
+            let _ = wait_op_s.try_send(Operation::Wakeup);
         });
 
         let received = &op_r.recv().unwrap();
@@ -100,9 +102,6 @@ fn main() {
             // Kill simutrans when requested.
             Operation::Reload | Operation::Stop => {
                 child_arc.kill().unwrap();
-                // Consume the waiter thread's signal so we won't deadlock when
-                // we join that thread.
-                let _ = &op_r.recv();
             }
             // It's already dead...
             Operation::Wakeup => {}
