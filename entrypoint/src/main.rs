@@ -79,7 +79,7 @@ fn main() {
             }
         );
         match received {
-            // Kill simutran when requested.
+            // Kill simutrans when requested.
             Operation::Reload | Operation::Stop => {
                 child_arc.kill().unwrap();
                 // Consume the waiter thread's signal so we won't deadlock when
