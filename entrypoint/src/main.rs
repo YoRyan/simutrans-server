@@ -26,6 +26,9 @@ struct Cli {
     /// Path to the directory containing the target save data.
     #[arg(long, default_value_os_t = PathBuf::from("/save"))]
     save: PathBuf,
+    /// Print debug messages to stderr.
+    #[arg(long, default_value_t = false)]
+    verbose: bool,
 }
 
 fn main() {
@@ -64,6 +67,14 @@ fn main() {
                 panic!("Unable to start simutrans: {}", err);
             }
         };
+        log(&args, || {
+            let cmd_args: Vec<&str> = cmd
+                .get_args()
+                .into_iter()
+                .map(|os| os.to_str().unwrap_or_default())
+                .collect();
+            format!("Starting simutrans with args: {}", cmd_args.join(" "))
+        });
         let child_arc = Arc::new(shared_child);
 
         // Spawn a thread to wait until simutrans exits.
@@ -77,14 +88,14 @@ fn main() {
         });
 
         let received = &op_r.recv().unwrap();
-        eprintln!(
-            "<*> {}",
+        log(&args, || {
             match received {
                 Operation::Reload => "Received request to restart Simutrans...",
                 Operation::Stop => "Received request to kill Simutrans and exit...",
                 Operation::Wakeup => "Simutrans exited, restarting...",
             }
-        );
+            .to_owned()
+        });
         match received {
             // Kill simutrans when requested.
             Operation::Reload | Operation::Stop => {
@@ -111,10 +122,12 @@ fn main() {
 
 fn copy_save_to_game(args: &Cli) -> Result<()> {
     copy_file(
+        args,
         &args.save.join("network.sve"),
         &args.simutrans.join("server13353-network.sve"),
     )?;
     copy_file(
+        args,
         &args.save.join("pwdhash.sve"),
         &args.simutrans.join("server13353-pwdhash.sve"),
     )?;
@@ -137,28 +150,30 @@ fn copy_game_to_save(args: &Cli) -> Result<()> {
         (_, _) => return Ok(()),
     };
 
-    copy_file_if_newer(src_save, &args.save.join("network.sve"))?;
+    copy_file_if_newer(args, src_save, &args.save.join("network.sve"))?;
     copy_file_if_newer(
+        args,
         &args.simutrans.join("server13353-pwdhash.sve"),
         &args.save.join("pwdhash.sve"),
     )?;
     Ok(())
 }
 
-fn copy_file_if_newer(src: &Path, dest: &Path) -> Result<()> {
+fn copy_file_if_newer(args: &Cli, src: &Path, dest: &Path) -> Result<()> {
     let do_copy: bool = match (mod_time(src), mod_time(dest)) {
         (Ok(src_t), Ok(dest_t)) => src_t > dest_t,
         (Ok(_), _) => true,
         _ => false,
     };
     if do_copy {
-        copy_file(src, dest)
+        copy_file(args, src, dest)
     } else {
         Ok(())
     }
 }
 
-fn copy_file(src: &Path, dest: &Path) -> Result<()> {
+fn copy_file(args: &Cli, src: &Path, dest: &Path) -> Result<()> {
+    log(args, || format!("Copying {:?} -> {:?}", src, dest));
     let data = fs::read(src)?;
     fs::write(dest, data)?;
     Ok(())
@@ -167,4 +182,13 @@ fn copy_file(src: &Path, dest: &Path) -> Result<()> {
 fn mod_time(path: &Path) -> Result<SystemTime> {
     let t = File::open(path)?.metadata()?.modified()?;
     Ok(t)
+}
+
+fn log<F>(args: &Cli, msg: F)
+where
+    F: Fn() -> String,
+{
+    if args.verbose {
+        eprintln!("<*> {}", msg());
+    }
 }
