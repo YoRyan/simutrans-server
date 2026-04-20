@@ -1,16 +1,14 @@
 use std::fs;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 use std::sync::{Arc, mpsc};
 use std::thread;
 use std::time::SystemTime;
 
+use clap::Parser;
 use shared_child::SharedChild;
 use signal_hook::iterator::Signals;
-
-static GAME_PATH: &str = "/game";
-static SAVE_PATH: &str = "/save";
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -20,9 +18,18 @@ enum Operation {
     Wakeup,
 }
 
+#[derive(Parser)]
+struct Cli {
+    /// Path to the single-user install of simutrans.
+    #[arg(long, default_value_os_t = PathBuf::from("/game"))]
+    simutrans: PathBuf,
+    /// Path to the directory containing the target save data.
+    #[arg(long, default_value_os_t = PathBuf::from("/save"))]
+    save: PathBuf,
+}
+
 fn main() {
-    let game_path = Path::new(GAME_PATH);
-    let exe = &game_path.join("simutrans");
+    let args = Cli::parse();
     let (op_s, op_r) = mpsc::sync_channel::<Operation>(1);
     let loop_op_s = op_s.clone();
 
@@ -44,9 +51,9 @@ fn main() {
     });
 
     loop {
-        let _ = copy_save_to_game();
+        let _ = copy_save_to_game(&args);
 
-        let mut cmd = Command::new(exe);
+        let mut cmd = Command::new(args.simutrans.join("simutrans"));
         cmd.arg("-singleuser");
         cmd.arg("-server");
         cmd.args(["-objects", "pak"]);
@@ -91,7 +98,7 @@ fn main() {
         };
         wait_thread.join().unwrap();
 
-        let _ = copy_game_to_save();
+        let _ = copy_game_to_save(&args);
 
         match received {
             Operation::Reload | Operation::Wakeup => continue,
@@ -102,26 +109,21 @@ fn main() {
     exit(0);
 }
 
-fn copy_save_to_game() -> Result<()> {
-    let save_path = Path::new(SAVE_PATH);
-    let game_path = Path::new(GAME_PATH);
+fn copy_save_to_game(args: &Cli) -> Result<()> {
     copy_file(
-        &save_path.join("network.sve"),
-        &game_path.join("server13353-network.sve"),
+        &args.save.join("network.sve"),
+        &args.simutrans.join("server13353-network.sve"),
     )?;
     copy_file(
-        &save_path.join("pwdhash.sve"),
-        &game_path.join("server13353-pwdhash.sve"),
+        &args.save.join("pwdhash.sve"),
+        &args.simutrans.join("server13353-pwdhash.sve"),
     )?;
     Ok(())
 }
 
-fn copy_game_to_save() -> Result<()> {
-    let save_path = Path::new(SAVE_PATH);
-    let game_path = Path::new(GAME_PATH);
-
-    let kill_save = &game_path.join("server13353-restore.sve");
-    let join_save = &game_path.join("server13353-network.sve");
+fn copy_game_to_save(args: &Cli) -> Result<()> {
+    let kill_save = &args.simutrans.join("server13353-restore.sve");
+    let join_save = &args.simutrans.join("server13353-network.sve");
     let src_save = match (mod_time(&kill_save), mod_time(&join_save)) {
         (Ok(kill_t), Ok(join_t)) => {
             if kill_t > join_t {
@@ -135,16 +137,16 @@ fn copy_game_to_save() -> Result<()> {
         (_, _) => return Ok(()),
     };
 
-    copy_file_if_newer(src_save, &save_path.join("network.sve"))?;
+    copy_file_if_newer(src_save, &args.save.join("network.sve"))?;
     copy_file_if_newer(
-        &game_path.join("server13353-pwdhash.sve"),
-        &save_path.join("pwdhash.sve"),
+        &args.simutrans.join("server13353-pwdhash.sve"),
+        &args.save.join("pwdhash.sve"),
     )?;
     Ok(())
 }
 
 fn copy_file_if_newer(src: &Path, dest: &Path) -> Result<()> {
-    let do_copy = match (mod_time(src), mod_time(dest)) {
+    let do_copy: bool = match (mod_time(src), mod_time(dest)) {
         (Ok(src_t), Ok(dest_t)) => src_t > dest_t,
         (Ok(_), _) => true,
         _ => false,
