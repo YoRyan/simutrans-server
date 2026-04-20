@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 use std::sync::{Arc, mpsc};
 use std::thread;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use clap::Parser;
 use shared_child::SharedChild;
@@ -26,6 +26,9 @@ struct Cli {
     /// Path to the directory containing the target save data.
     #[arg(long, default_value_os_t = PathBuf::from("/save"))]
     save: PathBuf,
+    /// Kill simutrans periodically to force a save (set to 0 to disable)
+    #[arg(long, default_value_t = 120)]
+    reload_mins: u64,
     /// Print debug messages to stderr.
     #[arg(long, default_value_t = false)]
     verbose: bool,
@@ -34,6 +37,7 @@ struct Cli {
 fn main() {
     let args = Cli::parse();
     let (op_s, op_r) = mpsc::sync_channel::<Operation>(1);
+    let timer_op_s = op_s.clone();
     let loop_op_s = op_s.clone();
 
     // Spawn a thread to listen for commands sent via Linux signals.
@@ -52,6 +56,16 @@ fn main() {
             });
         }
     });
+
+    // Spawn a thread to periodically kill simutrans and force a save.
+    if args.reload_mins > 0 {
+        thread::spawn(move || {
+            loop {
+                thread::sleep(Duration::from_mins(args.reload_mins));
+                let _ = timer_op_s.try_send(Operation::Reload);
+            }
+        });
+    }
 
     loop {
         let _ = copy_save_to_game(&args);
