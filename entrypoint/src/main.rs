@@ -112,14 +112,7 @@ fn main() {
             }
             .to_owned()
         });
-        match received {
-            // Kill simutrans when requested.
-            Operation::Reload | Operation::Stop => {
-                child_arc.kill().unwrap();
-            }
-            // It's already dead...
-            Operation::Wakeup => {}
-        };
+        let _ = child_arc.kill();
         wait_thread.join().unwrap();
 
         let _ = copy_game_to_save(&args);
