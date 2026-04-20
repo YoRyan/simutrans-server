@@ -121,9 +121,19 @@ fn main() {
 }
 
 fn copy_save_to_game(args: &Cli) -> Result<()> {
+    let src_save = &args.save.join("network.sve");
+    match mod_time(src_save) {
+        Ok(_) => {}
+        Err(_) => {
+            panic!(
+                "Expected save file at {:?}, but it does not exist.",
+                src_save
+            );
+        }
+    }
     copy_file(
         args,
-        &args.save.join("network.sve"),
+        src_save,
         &args.simutrans.join("server13353-network.sve"),
     )?;
     copy_file(
