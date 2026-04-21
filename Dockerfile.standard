@@ -1,5 +1,5 @@
-# first stage
-FROM debian:stable AS builder
+# Build simutrans
+FROM debian:trixie AS simutrans
 
 RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
   autoconf \
@@ -23,13 +23,20 @@ RUN autoconf && ./configure && \
 RUN ./tools/distribute.sh && \
   mkdir /code/dist && cd /code/dist && \
   unzip /code/simutrans/trunk/simulinux-${REVISION}.zip
-RUN groupadd -r simu && useradd --no-log-init -r -g simu simu
 
-# second stage
-FROM scratch
-COPY --from=builder /etc/passwd /etc/group /etc/
-COPY --from=builder --chown=simu:simu /code/dist/simutrans/ /game/
+# Build entrypoint
+FROM rust:1-trixie AS entrypoint
+
+COPY entrypoint /code
+WORKDIR /code
+RUN cargo build --release
+
+# Final image
+FROM debian:trixie
+RUN groupadd -r simu && useradd --no-log-init -r -g simu simu
+COPY --from=simutrans --chown=simu:simu /code/dist/simutrans/ /game/
+COPY --from=entrypoint /code/target/release/entrypoint /entrypoint
 USER simu
-ENTRYPOINT ["/game/simutrans", "-server", "-singleuser"]
-VOLUME /game/save
+ENTRYPOINT /entrypoint
+VOLUME /save
 EXPOSE 13353

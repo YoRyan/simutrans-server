@@ -1,10 +1,8 @@
-#syntax=docker/dockerfile:1.2
-
 ARG SIMUTRANS_APPID=434520
 ARG DLC_DEPOT=434529
 ARG PAK_DIR=pak128
 
-# first stage
+# Download stage
 FROM steamcmd/steamcmd:alpine AS downloader
 ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
@@ -15,7 +13,7 @@ RUN --mount=type=secret,id=steam_login \
   +download_depot ${SIMUTRANS_APPID} ${DLC_DEPOT} \
   +quit
 
-# second stage
+# Copy to base image
 FROM yoryan/simutrans-server:steam-standard
 ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
@@ -23,4 +21,3 @@ ARG PAK_DIR
 COPY --from=downloader --chown=simu:simu \
   /root/.local/share/Steam/steamcmd/linux32/steamapps/content/app_${SIMUTRANS_APPID}/depot_${DLC_DEPOT}/${PAK_DIR} \
   /game/pak/
-ENTRYPOINT ["/game/simutrans", "-server", "-singleuser", "-objects", "pak"]
