@@ -7,6 +7,7 @@ use std::thread;
 use std::time::{Duration, SystemTime};
 
 use clap::Parser;
+use log::{error, info, log_enabled};
 use shared_child::SharedChild;
 use signal_hook::iterator::Signals;
 
@@ -29,13 +30,12 @@ struct Cli {
     /// Kill simutrans periodically to force a save (set to 0 to disable)
     #[arg(long, default_value_t = 120)]
     reload_mins: u64,
-    /// Print debug messages to stderr.
-    #[arg(long, default_value_t = false)]
-    verbose: bool,
 }
 
 fn main() {
     let args = Cli::parse();
+    env_logger::init();
+
     let (op_s, op_r) = mpsc::sync_channel::<Operation>(1);
     let timer_op_s = op_s.clone();
     let loop_op_s = op_s.clone();
@@ -68,7 +68,12 @@ fn main() {
     }
 
     loop {
-        let _ = copy_save_to_game(&args);
+        match copy_save_to_game(&args) {
+            Ok(_) => {}
+            Err(err) => {
+                error!("Error copying save to simutrans: {}", err);
+            }
+        }
 
         let mut cmd = Command::new(args.simutrans.join("simutrans"));
         cmd.arg("-singleuser");
@@ -81,14 +86,15 @@ fn main() {
                 panic!("Unable to start simutrans: {}", err);
             }
         };
-        log(&args, || {
+        if log_enabled!(log::Level::Info) {
             let cmd_args: Vec<&str> = cmd
                 .get_args()
                 .into_iter()
                 .map(|os| os.to_str().unwrap_or_default())
                 .collect();
-            format!("Starting simutrans with args: {}", cmd_args.join(" "))
-        });
+            let log_args = cmd_args.join(" ");
+            info!("Starting simutrans with args: {}", log_args);
+        }
         let child_arc = Arc::new(shared_child);
 
         // Spawn a thread to wait until simutrans exits.
@@ -104,18 +110,23 @@ fn main() {
         });
 
         let received = &op_r.recv().unwrap();
-        log(&args, || {
+        info!(
+            "{}",
             match received {
                 Operation::Reload => "Received request to restart Simutrans...",
                 Operation::Stop => "Received request to kill Simutrans and exit...",
                 Operation::Wakeup => "Simutrans exited, restarting...",
             }
-            .to_owned()
-        });
+        );
         let _ = child_arc.kill();
         wait_thread.join().unwrap();
 
-        let _ = copy_game_to_save(&args);
+        match copy_game_to_save(&args) {
+            Ok(_) => {}
+            Err(err) => {
+                error!("Error copying simutrans autosave: {}", err);
+            }
+        }
 
         match received {
             Operation::Reload | Operation::Wakeup => continue,
@@ -137,13 +148,8 @@ fn copy_save_to_game(args: &Cli) -> Result<()> {
             );
         }
     }
+    copy_file(src_save, &args.simutrans.join("server13353-network.sve"))?;
     copy_file(
-        args,
-        src_save,
-        &args.simutrans.join("server13353-network.sve"),
-    )?;
-    copy_file(
-        args,
         &args.save.join("pwdhash.sve"),
         &args.simutrans.join("server13353-pwdhash.sve"),
     )?;
@@ -166,30 +172,29 @@ fn copy_game_to_save(args: &Cli) -> Result<()> {
         (_, _) => return Ok(()),
     };
 
-    copy_file_if_newer(args, src_save, &args.save.join("network.sve"))?;
+    copy_file_if_newer(src_save, &args.save.join("network.sve"))?;
     copy_file_if_newer(
-        args,
         &args.simutrans.join("server13353-pwdhash.sve"),
         &args.save.join("pwdhash.sve"),
     )?;
     Ok(())
 }
 
-fn copy_file_if_newer(args: &Cli, src: &Path, dest: &Path) -> Result<()> {
+fn copy_file_if_newer(src: &Path, dest: &Path) -> Result<()> {
     let do_copy: bool = match (mod_time(src), mod_time(dest)) {
         (Ok(src_t), Ok(dest_t)) => src_t > dest_t,
         (Ok(_), _) => true,
         _ => false,
     };
     if do_copy {
-        copy_file(args, src, dest)
+        copy_file(src, dest)
     } else {
         Ok(())
     }
 }
 
-fn copy_file(args: &Cli, src: &Path, dest: &Path) -> Result<()> {
-    log(args, || format!("Copying {:?} -> {:?}", src, dest));
+fn copy_file(src: &Path, dest: &Path) -> Result<()> {
+    info!("Copying {:?} -> {:?}", src, dest);
     let data = fs::read(src)?;
     fs::write(dest, data)?;
     Ok(())
@@ -198,13 +203,4 @@ fn copy_file(args: &Cli, src: &Path, dest: &Path) -> Result<()> {
 fn mod_time(path: &Path) -> Result<SystemTime> {
     let t = File::open(path)?.metadata()?.modified()?;
     Ok(t)
-}
-
-fn log<F>(args: &Cli, msg: F)
-where
-    F: Fn() -> String,
-{
-    if args.verbose {
-        eprintln!("<*> {}", msg());
-    }
 }
