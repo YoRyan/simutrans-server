@@ -23,6 +23,8 @@ RUN autoconf && ./configure && \
 RUN ./tools/distribute.sh && \
   mkdir /code/dist && cd /code/dist && \
   unzip /code/simutrans/trunk/simulinux-${REVISION}.zip
+WORKDIR /code/dist/simutrans
+RUN sed -i -e 's/^#server_save_game_on_quit = 0$/server_save_game_on_quit = 1/' config/simuconf.tab
 
 # Build entrypoint
 FROM rust:1-trixie AS entrypoint
