@@ -39,6 +39,6 @@ RUN groupadd -r simu && useradd --no-log-init -r -g simu simu
 COPY --from=simutrans --chown=simu:simu /code/dist/simutrans/ /game/
 COPY --from=entrypoint /code/target/release/entrypoint /entrypoint
 USER simu
-ENTRYPOINT /entrypoint
+ENTRYPOINT ["/entrypoint"]
 VOLUME /save
 EXPOSE 13353
