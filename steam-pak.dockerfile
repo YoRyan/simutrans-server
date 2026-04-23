@@ -1,3 +1,4 @@
+ARG BASE_IMAGE=yoryan/simutrans-server:steam-standard
 ARG SIMUTRANS_APPID=434520
 ARG DLC_DEPOT=434529
 ARG PAK_DIR=pak128
@@ -14,7 +15,8 @@ RUN --mount=type=secret,id=steam_login \
   +quit
 
 # Copy to base image
-FROM yoryan/simutrans-server:steam-standard
+ARG BASE
+FROM ${BASE_IMAGE}
 ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
 ARG PAK_DIR
