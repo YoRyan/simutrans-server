@@ -74,11 +74,8 @@ fn main() {
     }
 
     loop {
-        match copy_save_to_game(&args) {
-            Ok(_) => {}
-            Err(err) => {
-                error!("Error copying save to simutrans: {}", err);
-            }
+        if let Err(err) = copy_save_to_game(&args) {
+            error!("Error copying save to simutrans: {}", err);
         }
 
         let shared_child: SharedChild;
@@ -137,11 +134,8 @@ fn main() {
         let _ = child_arc.kill();
         wait_thread.join().unwrap();
 
-        match copy_game_to_save(&args) {
-            Ok(_) => {}
-            Err(err) => {
-                error!("Error copying simutrans autosave: {}", err);
-            }
+        if let Err(err) = copy_game_to_save(&args) {
+            error!("Error copying simutrans autosave: {}", err);
         }
 
         match received {
