@@ -30,6 +30,12 @@ struct Cli {
     /// Kill simutrans periodically to force a save (set to 0 to disable)
     #[arg(long, default_value_t = 120)]
     reload_mins: u64,
+    /// Set simutrans debug level (to set the log level for this wrapper, use the RUST_LOG environment variable)
+    #[arg(long, default_value_t = 1)]
+    debug: u32,
+    /// Pass arguments directly to simutrans.
+    #[arg(trailing_var_arg = true)]
+    args: Option<Vec<String>>,
 }
 
 fn main() {
@@ -75,25 +81,35 @@ fn main() {
             }
         }
 
-        let mut cmd = Command::new(args.simutrans.join("simutrans"));
-        cmd.arg("-singleuser");
-        cmd.arg("-server");
-        cmd.args(["-objects", "pak"]);
-        cmd.args(["-debug", "1"]);
-        let shared_child = match SharedChild::spawn(&mut cmd) {
-            Ok(child) => child,
-            Err(err) => {
-                panic!("Unable to start simutrans: {}", err);
+        let shared_child: SharedChild;
+        {
+            let mut cmd = Command::new(args.simutrans.join("simutrans"));
+            cmd.arg("-singleuser");
+            cmd.arg("-server");
+            cmd.args(["-objects", "pak"]);
+            cmd.args(["-load", "network"]);
+            cmd.args(["-debug", &args.debug.to_string().as_str()]);
+
+            if let Some(a) = &args.args {
+                cmd.args(a.iter().map(|s| s.as_str()));
             }
-        };
-        if log_enabled!(log::Level::Info) {
-            let cmd_args: Vec<&str> = cmd
-                .get_args()
-                .into_iter()
-                .map(|os| os.to_str().unwrap_or_default())
-                .collect();
-            let log_args = cmd_args.join(" ");
-            info!("Starting simutrans with args: {}", log_args);
+
+            if log_enabled!(log::Level::Info) {
+                let cmd_args: Vec<&str> = cmd
+                    .get_args()
+                    .into_iter()
+                    .map(|os| os.to_str().unwrap_or_default())
+                    .collect();
+                let log_args = cmd_args.join(" ");
+                info!("Starting simutrans with args: {}", log_args);
+            }
+
+            shared_child = match SharedChild::spawn(&mut cmd) {
+                Ok(child) => child,
+                Err(err) => {
+                    panic!("Unable to start simutrans: {}", err);
+                }
+            };
         }
         let child_arc = Arc::new(shared_child);
 
@@ -148,7 +164,9 @@ fn copy_save_to_game(args: &Cli) -> Result<()> {
             );
         }
     }
-    copy_file(src_save, &args.simutrans.join("server13353-network.sve"))?;
+    let dest_dir = &args.simutrans.join("save");
+    let _ = mkdir(dest_dir);
+    copy_file(src_save, &dest_dir.join("network.sve"))?;
     copy_file(
         &args.save.join("pwdhash.sve"),
         &args.simutrans.join("server13353-pwdhash.sve"),
@@ -177,6 +195,12 @@ fn copy_game_to_save(args: &Cli) -> Result<()> {
         &args.simutrans.join("server13353-pwdhash.sve"),
         &args.save.join("pwdhash.sve"),
     )?;
+    Ok(())
+}
+
+fn mkdir(dir: &Path) -> Result<()> {
+    info!("Mkdir {:?}", dir);
+    fs::create_dir(dir)?;
     Ok(())
 }
 
