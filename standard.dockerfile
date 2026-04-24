@@ -1,5 +1,8 @@
+ARG REVISION=11919
+
 # Build simutrans
 FROM debian:trixie AS simutrans
+ARG REVISION
 
 RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
   autoconf \
@@ -15,7 +18,6 @@ RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
   zlib1g-dev:i386
 WORKDIR /code
 
-ARG REVISION=11919
 RUN svn checkout svn://servers.simutrans.org@$REVISION
 WORKDIR /code/simutrans/trunk
 RUN autoconf && ./configure && \
@@ -28,9 +30,11 @@ RUN sed -i -e 's/^#server_save_game_on_quit = 0$/server_save_game_on_quit = 1/' 
 
 # Build entrypoint
 FROM rust:1-trixie AS entrypoint
+ARG REVISION
 
 COPY entrypoint /code
 WORKDIR /code
+ENV REVISION=$REVISION
 RUN cargo build --release
 
 # Final image

@@ -1,7 +1,8 @@
 use std::fs;
 use std::fs::File;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::{Command, exit};
+use std::process::{Command, Stdio, exit};
 use std::sync::{Arc, mpsc};
 use std::thread;
 use std::time::{Duration, SystemTime};
@@ -36,12 +37,42 @@ struct Cli {
     /// Pass arguments directly to simutrans.
     #[arg(trailing_var_arg = true)]
     args: Option<Vec<String>>,
+    /// Show the version of simutrans shipped with this image.
+    #[arg(long, default_value_t = false)]
+    version: bool,
 }
 
 fn main() {
     let args = Cli::parse();
     env_logger::init();
+    if args.version {
+        let _ = show_version(args);
+    } else {
+        run_game(args);
+    }
+}
 
+fn show_version(args: Cli) -> Result<()> {
+    println!(
+        "SVN revision {}",
+        option_env!("REVISION").unwrap_or("unknown")
+    );
+
+    let output = Command::new(args.simutrans.join("simutrans"))
+        .arg("-help")
+        .stdout(Stdio::piped())
+        .spawn()?
+        .wait_with_output()?;
+    let mut stdout = std::io::stdout();
+    for line in output.stdout.split(|&b| b == b'\n').take(13) {
+        stdout.write_all(line)?;
+        stdout.write(b"\n")?;
+    }
+
+    exit(0);
+}
+
+fn run_game(args: Cli) {
     let (op_s, op_r) = mpsc::sync_channel::<Operation>(1);
     let timer_op_s = op_s.clone();
     let loop_op_s = op_s.clone();
