@@ -8,7 +8,7 @@ use std::time::{Duration, SystemTime};
 
 use clap::Parser;
 use log::{error, info, log_enabled};
-use shared_child::SharedChild;
+use shared_child::{SharedChild, unix::SharedChildExt};
 use signal_hook::iterator::Signals;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -116,7 +116,7 @@ fn main() {
         let wait_thread = thread::spawn(move || {
             child_arc_clone.wait().unwrap();
             // We may need to wake the main (kill) thread if simutrans exits
-            // before any kill was attempted.
+            // before any kill was signaled.
             // Don't block in case another source already sent some other value
             // and there is nobody listening to consume ours.
             let _ = wait_op_s.try_send(Operation::Wakeup);
@@ -131,7 +131,7 @@ fn main() {
                 Operation::Wakeup => "Simutrans exited, restarting...",
             }
         );
-        let _ = child_arc.kill();
+        let _ = child_arc.send_signal(signal_hook::consts::SIGTERM);
         wait_thread.join().unwrap();
 
         if let Err(err) = copy_game_to_save(&args) {
@@ -139,7 +139,12 @@ fn main() {
         }
 
         match received {
-            Operation::Reload | Operation::Wakeup => continue,
+            Operation::Reload | Operation::Wakeup => {
+                // Ensure the message queue is completely drained, so that we
+                // don't wake ourselves up right away on the next iteration.
+                while let Ok(_) = &op_r.try_recv() {}
+                continue;
+            }
             Operation::Stop => break,
         }
     }
