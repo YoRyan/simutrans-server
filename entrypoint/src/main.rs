@@ -78,7 +78,7 @@ fn main() {
             error!("Error copying save to simutrans: {}", err);
         }
 
-        let shared_child: SharedChild;
+        let child_arc: Arc<SharedChild>;
         {
             let mut cmd = Command::new(args.simutrans.join("simutrans"));
             cmd.arg("-singleuser");
@@ -101,14 +101,14 @@ fn main() {
                 info!("Starting simutrans with args: {}", log_args);
             }
 
-            shared_child = match SharedChild::spawn(&mut cmd) {
+            let shared_child = match SharedChild::spawn(&mut cmd) {
                 Ok(child) => child,
                 Err(err) => {
                     panic!("Unable to start simutrans: {}", err);
                 }
             };
+            child_arc = Arc::new(shared_child);
         }
-        let child_arc = Arc::new(shared_child);
 
         // Spawn a thread to wait until simutrans exits.
         let child_arc_clone = child_arc.clone();
