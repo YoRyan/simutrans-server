@@ -15,7 +15,6 @@ RUN --mount=type=secret,id=steam_login \
   +quit
 
 # Copy to base image
-ARG BASE
 FROM ${BASE_IMAGE}
 ARG SIMUTRANS_APPID
 ARG DLC_DEPOT
