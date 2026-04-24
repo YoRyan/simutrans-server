@@ -28,6 +28,9 @@ struct Cli {
     /// Path to the directory containing the target save data.
     #[arg(long, default_value_os_t = PathBuf::from("/save"))]
     save: PathBuf,
+    /// Copy the supplied .sve file into the save data directory.
+    #[arg(long, default_value = None)]
+    populate: Option<PathBuf>,
     /// Kill simutrans periodically to force a save (set to 0 to disable)
     #[arg(long, default_value_t = 120)]
     reload_mins: u64,
@@ -47,6 +50,8 @@ fn main() {
     env_logger::init();
     if args.version {
         let _ = show_version(args);
+    } else if args.populate.is_some() {
+        populate(args);
     } else {
         run_game(args);
     }
@@ -67,6 +72,18 @@ fn show_version(args: Cli) -> Result<()> {
     for line in output.stdout.split(|&b| b == b'\n').take(13) {
         stdout.write_all(line)?;
         stdout.write(b"\n")?;
+    }
+
+    exit(0);
+}
+
+fn populate(args: Cli) {
+    if let Err(err) = copy_file(
+        args.populate.unwrap().as_path(),
+        &args.save.join("network.sve"),
+    ) {
+        error!("{}", err);
+        exit(1);
     }
 
     exit(0);
