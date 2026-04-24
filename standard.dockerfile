@@ -42,6 +42,7 @@ FROM debian:trixie
 RUN groupadd -r simu && useradd --no-log-init -r -g simu simu
 COPY --from=simutrans --chown=simu:simu /code/dist/simutrans/ /game/
 COPY --from=entrypoint /code/target/release/entrypoint /entrypoint
+RUN mkdir /save && chown simu:simu /save
 USER simu
 ENTRYPOINT ["/entrypoint"]
 VOLUME /save
