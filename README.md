@@ -2,11 +2,11 @@
 
 This repository contains Simutrans headless servers that are ready to run in Docker and are compatible with the version of the game available through [Steam](https://store.steampowered.com/app/434520/Simutrans/). Find auto-built images on [Docker Hub](https://hub.docker.com/r/yoryan/simutrans-server). Spin up a game for your fellow transportation nerds with ease!
 
-Compared to compiling Simutrans yourself, this image has a few extra features:
+This image contains a headless Simutrans executable that is compiled as 32-bit, which is preferred by the game. It also contains a wrapper program that makes Simutrans behave better as a service:
 
-- Runs as a 32-bit executable, which is preferred by Simutrans.
-- Pak warning messages are patched out, which allows dated paks like pak128.japan to load.
-- Network saves have been moved to the `save/` folder, allowing for easy management of save state in a Docker volume.
+- Save data is copied to and from a dedicated `/save` directory, which can be easily stored inside a Docker volume or bind mount.
+- Requests to stop the container are forwarded to Simutrans and handled gracefully with an autosave.
+- The game is autosaved on a regular (real-world) time basis, by default every two hours. This is accomplished by periodically killing and restarting Simutrans.
 
 ## Tags
 
@@ -21,14 +21,45 @@ Compared to compiling Simutrans yourself, this image has a few extra features:
 
 ## Usage
 
-Save state is stored in the `/game/save/` folder. On the first run, you can use the `-load` flag to load any save game in this folder.
+For the first run, you can use `--populate` to copy an existing save file into the `/save` volume while bypassing any permissions problems:
 
 ```
-docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-standard-pak64 -load MyServerTemplateGame
+docker run -it --rm -v ~/simutrans/save/mygame.sve:/mygame.sve:ro -v simutrans-server:/save yoryan/simutrans-server:steam-standard-pak64 --populate /mygame.sve
 ```
 
-Simutrans will update the autosave file at `/game/save/server13353-network.sve` whenever a new client connects. You can omit the `-load` flag to load this autosave.
+For regular operations, just run the container without any arguments:
 
 ```
-docker run -v C:\Users\Ryan\Documents\Simutrans\save\:/game/save yoryan/simutrans-server:steam-standard-pak64
+docker run -v simutrans-server:/save yoryan/simutrans-server:steam-standard-pak64
+```
+
+A suggested Docker Compose service definition is as follows:
+
+```yaml
+simutrans:
+  image: yoryan/simutrans-server:steam-standard-pak64
+  restart: unless-stopped
+  environment:
+    RUST_LOG: info
+  volumes:
+    - ./simuconf.tab:/game/config/simuconf.tab:ro
+    - simutrans:/save/
+  ports:
+    - "13353:13353"
+```
+
+If you choose to bind-mount `/save` instead of using a volume, make sure the mount is read-writable by the `999:999` user. The image is designed to run as this non-root user.
+
+You can set simuconf.tab options by bind-mounting your own version of this file to `/game/config/simuconf.tab`. However, please ensure you have set `server_save_game_on_quit = 1` in this file; otherwise, the wrapper program will not be able to obtain autosaves from Simutrans.
+
+You can pass command-line options directly to Simutrans by appending them to the container command:
+
+```
+docker run -v simutrans-server:/save yoryan/simutrans-server:steam-standard-pak64 -- -freeplay
+```
+
+For more information about the options accepted by the wrapper program, see:
+
+```
+docker run -it --rm yoryan/simutrans-server:steam-standard --help
 ```
