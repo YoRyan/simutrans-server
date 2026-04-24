@@ -202,14 +202,11 @@ fn run_game(args: Cli) {
 
 fn copy_save_to_game(args: &Cli) -> Result<()> {
     let src_save = &args.save.join("network.sve");
-    match mod_time(src_save) {
-        Ok(_) => {}
-        Err(_) => {
-            panic!(
-                "Expected save file at {:?}, but it does not exist.",
-                src_save
-            );
-        }
+    if let Err(_) = mod_time(src_save) {
+        panic!(
+            "Expected save file at {:?}, but it does not exist.",
+            src_save
+        );
     }
     let dest_dir = &args.simutrans.join("save");
     let _ = mkdir(dest_dir);
