@@ -71,7 +71,7 @@ fn show_version(args: Cli) -> Result<()> {
     let mut stdout = std::io::stdout();
     for line in output.stdout.split(|&b| b == b'\n').take(13) {
         stdout.write_all(line)?;
-        stdout.write(b"\n")?;
+        stdout.write_all(b"\n")?;
     }
 
     exit(0);
@@ -133,7 +133,7 @@ fn run_game(args: Cli) {
             cmd.arg("-server");
             cmd.args(["-objects", "pak"]);
             cmd.args(["-load", "network"]);
-            cmd.args(["-debug", &args.debug.to_string().as_str()]);
+            cmd.args(["-debug", args.debug.to_string().as_str()]);
 
             if let Some(a) = &args.args {
                 cmd.args(a.iter().map(|s| s.as_str()));
@@ -142,7 +142,6 @@ fn run_game(args: Cli) {
             if log_enabled!(log::Level::Info) {
                 let cmd_args: Vec<&str> = cmd
                     .get_args()
-                    .into_iter()
                     .map(|os| os.to_str().unwrap_or_default())
                     .collect();
                 let log_args = cmd_args.join(" ");
@@ -190,7 +189,7 @@ fn run_game(args: Cli) {
             Operation::Reload | Operation::Wakeup => {
                 // Ensure the message queue is completely drained, so that we
                 // don't wake ourselves up right away on the next iteration.
-                while let Ok(_) = &op_r.try_recv() {}
+                while op_r.try_recv().is_ok() {}
                 continue;
             }
             Operation::Stop => break,
@@ -202,7 +201,7 @@ fn run_game(args: Cli) {
 
 fn copy_save_to_game(args: &Cli) -> Result<()> {
     let src_save = &args.save.join("network.sve");
-    if let Err(_) = mod_time(src_save) {
+    if mod_time(src_save).is_err() {
         panic!(
             "Expected save file at {:?}, but it does not exist.",
             src_save
@@ -221,7 +220,7 @@ fn copy_save_to_game(args: &Cli) -> Result<()> {
 fn copy_game_to_save(args: &Cli) -> Result<()> {
     let kill_save = &args.simutrans.join("server13353-restore.sve");
     let join_save = &args.simutrans.join("server13353-network.sve");
-    let src_save = match (mod_time(&kill_save), mod_time(&join_save)) {
+    let src_save = match (mod_time(kill_save), mod_time(join_save)) {
         (Ok(kill_t), Ok(join_t)) => {
             if kill_t > join_t {
                 kill_save
