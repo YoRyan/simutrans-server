@@ -126,8 +126,7 @@ fn run_game(args: Cli) {
             error!("Error copying save to simutrans: {}", err);
         }
 
-        let child_arc: Arc<SharedChild>;
-        {
+        let child_arc = {
             let mut cmd = Command::new(args.simutrans.join("simutrans"));
             cmd.arg("-singleuser");
             cmd.arg("-server");
@@ -154,8 +153,8 @@ fn run_game(args: Cli) {
                     panic!("Unable to start simutrans: {}", err);
                 }
             };
-            child_arc = Arc::new(shared_child);
-        }
+            Arc::new(shared_child)
+        };
 
         // Spawn a thread to wait until simutrans exits.
         let child_arc_clone = child_arc.clone();
