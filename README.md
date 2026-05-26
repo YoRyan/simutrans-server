@@ -6,7 +6,7 @@ This image contains a headless Simutrans executable that is compiled as 32-bit, 
 
 - Save data is copied to and from a dedicated `/save` directory, which can be easily stored inside a Docker volume or bind mount.
 - Requests to stop the container are forwarded to Simutrans and handled gracefully with an autosave.
-- The game is autosaved on a regular (real-world) time basis, by default every two hours. This is accomplished by periodically killing and restarting Simutrans.
+- The game is autosaved on a regular (real-world) time basis, by default every eight hours. This is accomplished by periodically killing and restarting Simutrans.
 
 ## Tags
 

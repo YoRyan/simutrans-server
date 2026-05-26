@@ -32,7 +32,7 @@ struct Cli {
     #[arg(long, default_value = None)]
     populate: Option<PathBuf>,
     /// Kill simutrans periodically to force a save (set to 0 to disable)
-    #[arg(long, default_value_t = 120)]
+    #[arg(long, default_value_t = 480)]
     reload_mins: u64,
     /// Set simutrans debug level (to set the log level for this wrapper, use the RUST_LOG environment variable)
     #[arg(long, default_value_t = 1)]
